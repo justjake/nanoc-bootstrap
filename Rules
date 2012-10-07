@@ -16,16 +16,16 @@
 STYLESHEET_DIR = '/css/'
 
 route STYLESHEET_DIR + '_*/' do; end
-compile STYLESHEET_DIR +'_*/' do; end
+compile STYLESHEET_DIR + '_*/' do; end
 
 # Sass route and compile
 route STYLESHEET_DIR + '*/' do
-    '/css/' + item.identifier.chop.split('/').last + '.css'
+    STYLESHEET_DIR + item.identifier.chop.split('/').last + '.css'
 end
 compile STYLESHEET_DIR + '*/' do
     filter :sass, {
       :syntax => :scss,
-      :load_paths => ['./content/'+STYLESHEET_DIR.chop]
+      :load_paths => ['./content/' + STYLESHEET_DIR.chop]
     }
 end
 
@@ -62,7 +62,7 @@ compile '*' do
     # don’t filter binary items
   else
     filter :haml
-    layout 'boilderplate'
+    layout 'boilerplate'
   end
 end
 
