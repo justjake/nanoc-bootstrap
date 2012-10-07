@@ -1,22 +1,70 @@
 #!/usr/bin/env ruby
-require 'compass'
-Compass.configuration.parse 'config/compass.config'
 
-compile '/stylesheets/*/' do
-   filter :sass, Compass.sass_engine_options
+# A few helpful tips about the Rules file:
+#
+# * The string given to #compile and #route are matching patterns for
+#   identifiers--not for paths. Therefore, you can’t match on extension.
+#
+# * The order of rules is important: for each item, only the first matching
+#   rule is applied.
+#
+# * Item identifiers start and end with a slash (e.g. “/about/” for the file
+#   “content/about.html”). To select all children, grandchildren, … of an
+#   item, use the pattern “/about/*/”; “/about/*” will also select the parent,
+#   because “*” matches zero or more characters.
+
+STYLESHEET_DIR = '/css/'
+
+route STYLESHEET_DIR + '_*/' do; end
+compile STYLESHEET_DIR +'_*/' do; end
+
+# Sass route and compile
+route STYLESHEET_DIR + '*/' do
+    '/css/' + item.identifier.chop.split('/').last + '.css'
+end
+compile STYLESHEET_DIR + '*/' do
+    filter :sass, {
+      :syntax => :scss,
+      :load_paths => ['./content/'+STYLESHEET_DIR.chop]
+    }
 end
 
-route '/stylesheets/*/' do
-   item.identifier.chop + '.css'
+# Coffeescript
+route '/js/*/' do
+  item.identifier.chop + '.js'
+end
+compile '/js/*/' do
+  if  item[:extension] == 'coffee'
+    filter :coffeescript
+  end
+end
+
+# static items, such as those from Libraries
+route   '/static/*' do
+    # /static/css/codemirror.css -> /css/codemirror.css
+    item.identifier[7..-2]
+end
+compile '/static/*' do; end
+
+route '*' do
+  if item.binary?
+    # Write item with identifier /foo/ to /foo.ext
+    # except don't output Photoshop files
+    item.identifier.chop + '.' + item[:extension] unless item[:extension] == 'psd'
+  else
+    # Write item with identifier /foo/ to /foo/index.html
+    item.identifier + 'index.html'
+  end
 end
 
 compile '*' do
-   filter :haml
-   layout 'default'
+  if item.binary?
+    # don’t filter binary items
+  else
+    filter :haml
+    layout 'boilderplate'
+  end
 end
 
-route '*' do
-  item.identifier + 'index.html'
-end
-
+layout 'boilerplate', :erb
 layout '*', :haml, :format => :html5
